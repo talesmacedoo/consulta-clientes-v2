@@ -1,5 +1,15 @@
-backend/__pycache__/
-backend/app/__pycache__/
-backend/app/services/__pycache__/
-backend/app/routes/__pycache__/
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
 venv/
+.venv/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
