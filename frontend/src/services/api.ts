@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000',
+  baseURL: 'http://localhost:5100',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -9,21 +9,25 @@ const api = axios.create({
 
 // Cliente Consultation
 export interface ClienteResponse {
+  id: number;
   nome: string;
   cpf: string;
   telefone: string;
-  dataNascimento?: string;
-  endereco?: string;
-  margemDisponivel?: number;
-  situacao?: string;
+  data_nascimento: string;
+  data_consulta: string;
 }
 
-export const consultarCliente = async (cpf: string, telefone: string): Promise<ClienteResponse> => {
+export interface ConsultaClienteResponse {
+  found: boolean;
+  cliente: ClienteResponse;
+}
+
+export const consultarCliente = async (cpf: string, telefone: string): Promise<ConsultaClienteResponse> => {
   const params = new URLSearchParams();
   if (cpf) params.append('cpf', cpf);
   if (telefone) params.append('telefone', telefone);
   
-  const response = await api.get(`/clientes/consulta?${params.toString()}`);
+  const response = await api.get(`/clientes/consultar?${params.toString()}`);
   return response.data;
 };
 

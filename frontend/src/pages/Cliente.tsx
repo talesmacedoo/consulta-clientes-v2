@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { consultarCliente, type ClienteResponse } from '@/services/api';
+import { ConsultaClienteResponse, consultarCliente } from '@/services/api';
+
 
 const Cliente = () => {
   const [cpf, setCpf] = useState('');
   const [telefone, setTelefone] = useState('');
   const [loading, setLoading] = useState(false);
-  const [resultado, setResultado] = useState<ClienteResponse | null>(null);
+  const [resultado, setResultado] = useState<ConsultaClienteResponse | null>(null);
   const [erro, setErro] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,18 +30,12 @@ const Cliente = () => {
     try {
       const response = await consultarCliente(cpf, telefone);
       setResultado(response);
-    } catch (err) {
-      // Mock response for development
-      const mockResponse: ClienteResponse = {
-        nome: 'João da Silva',
-        cpf: cpf || '123.456.789-00',
-        telefone: telefone || '(11) 99999-9999',
-        dataNascimento: '15/03/1980',
-        endereco: 'Rua das Flores, 123 - São Paulo/SP',
-        margemDisponivel: 850.00,
-        situacao: 'Ativo',
-      };
-      setResultado(mockResponse);
+    } catch (err: any) {
+      if (err.response && err.response.status === 404) {
+        setResultado({ found: false } as ConsultaClienteResponse);
+      } else {
+        setErro('Erro ao consultar cliente.');
+      }
     } finally {
       setLoading(false);
     }
@@ -101,7 +96,13 @@ const Cliente = () => {
                 <AlertDescription>{erro}</AlertDescription>
               </Alert>
             )}
-
+            {resultado && !resultado.found && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  Cliente não encontrado.
+                </AlertDescription>
+              </Alert>
+            )}
             <Button type="submit" disabled={loading} className="w-full md:w-auto">
               {loading ? (
                 <>
@@ -120,7 +121,7 @@ const Cliente = () => {
       </Card>
 
       {/* Result */}
-      {resultado && (
+      {resultado && resultado.found && (
         <Card>
           <CardHeader className="pb-4">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -133,53 +134,53 @@ const Cliente = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Nome</p>
-                  <p className="text-foreground font-medium">{resultado.nome}</p>
+                  <p className="text-foreground font-medium">{resultado.cliente.nome}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">CPF</p>
                   <p className="text-foreground font-medium flex items-center gap-2">
                     <CreditCard className="w-4 h-4" />
-                    {resultado.cpf}
+                    {resultado.cliente.cpf}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Telefone</p>
                   <p className="text-foreground font-medium flex items-center gap-2">
                     <Phone className="w-4 h-4" />
-                    {resultado.telefone}
+                    {resultado.cliente.telefone}
                   </p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Data de Nascimento</p>
-                  <p className="text-foreground font-medium">{resultado.dataNascimento}</p>
+                  <p className="text-foreground font-medium">{resultado.cliente.data_nascimento}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Endereço</p>
-                  <p className="text-foreground font-medium">{resultado.endereco}</p>
+                  <p className="text-foreground font-medium"> Nada</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Situação</p>
-                  <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
-                    resultado.situacao === 'Ativo' 
+                  {/*<span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                    resultado.situacao=== 'Ativo' 
                       ? 'bg-success/10 text-success' 
                       : 'bg-muted text-muted-foreground'
                   }`}>
                     {resultado.situacao}
-                  </span>
+                  </span>*/}
                 </div>
               </div>
             </div>
             
-            {resultado.margemDisponivel !== undefined && (
+            {/*resultado.margemDisponivel !== undefined && (
               <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
                 <p className="text-sm text-muted-foreground">Margem Disponível</p>
                 <p className="text-2xl font-bold text-primary">
                   {formatCurrency(resultado.margemDisponivel)}
                 </p>
               </div>
-            )}
+            )*/}
           </CardContent>
         </Card>
       )}
