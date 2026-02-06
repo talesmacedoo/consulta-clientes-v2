@@ -1,3 +1,4 @@
+import Logo from '@/assets/logo.png';
 import { NavLink } from 'react-router-dom';
 import { Search, Calculator, Building2, Bot, Phone } from 'lucide-react';
 
@@ -14,9 +15,10 @@ const Navbar = () => {
     <nav className="fixed left-0 top-0 h-screen w-56 bg-sidebar border-r border-sidebar-border flex flex-col z-50">
       {/* Logo */}
       <div className="p-5 border-b border-sidebar-border">
-        <h1 className="text-lg font-bold text-sidebar-foreground">
-          Sales<span className="text-sidebar-primary">Hub</span>
-        </h1>
+        <div className="container max-w-4xl mx-auto px-4">
+          <img src={Logo} alt="Maktub Logo" className="h-16 mb-2" />
+
+        </div>
       </div>
 
       {/* Navigation Links */}
