@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ConsultaClienteResponse, consultarCliente } from '@/services/api';
-
+import { validateCPF, formatCPF, formatPhone, validatePhone} from '@/lib/utils';
 
 const Cliente = () => {
   const [cpf, setCpf] = useState('');
@@ -20,18 +20,33 @@ const Cliente = () => {
     setErro('');
     setResultado(null);
 
+    // Nenhum campo preenchido
     if (!cpf && !telefone) {
       setErro('Informe pelo menos o CPF ou o telefone.');
+      return;
+    }
+
+    // CPF preenchido, mas inválido
+    if (cpf && !validateCPF(cpf)) {
+      setErro('CPF inválido.');
+      return;
+    }
+
+    if (telefone && !validatePhone(telefone)) {
+      setErro('Telefone inválido.');
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await consultarCliente(cpf, telefone);
+      // Envia CPF sem máscara para a API
+      const cpfLimpo = cpf.replace(/\D/g, '');
+
+      const response = await consultarCliente(cpfLimpo, telefone);
       setResultado(response);
     } catch (err: any) {
-      if (err.response && err.response.status === 404) {
+      if (err.response?.status === 404) {
         setResultado({ found: false } as ConsultaClienteResponse);
       } else {
         setErro('Erro ao consultar cliente.');
@@ -39,13 +54,6 @@ const Cliente = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
   };
 
   return (
@@ -75,18 +83,20 @@ const Cliente = () => {
                   id="cpf"
                   type="text"
                   value={cpf}
-                  onChange={(e) => setCpf(e.target.value)}
+                  onChange={(e) => setCpf(formatCPF(e.target.value))}
                   placeholder="000.000.000-00"
+                  maxLength={14}
                 />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="telefone">Telefone</Label>
                 <Input
                   id="telefone"
                   type="tel"
                   value={telefone}
-                  onChange={(e) => setTelefone(e.target.value)}
-                  placeholder="(11) 99999-9999"
+                  onChange={(e) => setTelefone(formatPhone(e.target.value))}
+                  placeholder="(71) 99999-9999"
                 />
               </div>
             </div>
@@ -96,13 +106,13 @@ const Cliente = () => {
                 <AlertDescription>{erro}</AlertDescription>
               </Alert>
             )}
+
             {resultado && !resultado.found && (
               <Alert variant="destructive">
-                <AlertDescription>
-                  Cliente não encontrado.
-                </AlertDescription>
+                <AlertDescription>Cliente não encontrado.</AlertDescription>
               </Alert>
             )}
+
             <Button type="submit" disabled={loading} className="w-full md:w-auto">
               {loading ? (
                 <>
@@ -151,36 +161,20 @@ const Cliente = () => {
                   </p>
                 </div>
               </div>
+
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Data de Nascimento</p>
-                  <p className="text-foreground font-medium">{resultado.cliente.data_nascimento}</p>
+                  <p className="text-foreground font-medium">
+                    {resultado.cliente.data_nascimento}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Endereço</p>
-                  <p className="text-foreground font-medium"> Nada</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Situação</p>
-                  {/*<span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
-                    resultado.situacao=== 'Ativo' 
-                      ? 'bg-success/10 text-success' 
-                      : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {resultado.situacao}
-                  </span>*/}
+                  <p className="text-foreground font-medium">Nada</p>
                 </div>
               </div>
             </div>
-            
-            {/*resultado.margemDisponivel !== undefined && (
-              <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
-                <p className="text-sm text-muted-foreground">Margem Disponível</p>
-                <p className="text-2xl font-bold text-primary">
-                  {formatCurrency(resultado.margemDisponivel)}
-                </p>
-              </div>
-            )*/}
           </CardContent>
         </Card>
       )}
