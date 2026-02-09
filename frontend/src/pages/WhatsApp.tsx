@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { formatPhone, validatePhone} from '@/lib/utils';
 
 const WhatsApp = () => {
   const [telefone, setTelefone] = useState('');
@@ -22,12 +23,12 @@ const WhatsApp = () => {
     return numbers;
   };
 
-  const validatePhone = (phone: string): boolean => {
+  /*const validatePhone = (phone: string): boolean => {
     const numbers = phone.replace(/\D/g, '');
     // Valid: 10 digits (landline) or 11 digits (mobile) without country code
     // Or 12-13 digits with country code
     return numbers.length >= 10 && numbers.length <= 13;
-  };
+  };*/
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +43,7 @@ const WhatsApp = () => {
       setErro('Número de telefone inválido. Informe o DDD + número.');
       return;
     }
+
 
     const formattedPhone = formatPhoneForWhatsApp(telefone);
     const whatsappUrl = `https://wa.me/${formattedPhone}`;
@@ -65,7 +67,7 @@ const WhatsApp = () => {
       {/* Form */}
       <Card className="max-w-md">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg">Iniciar Conversa</CardTitle>
+          <CardTitle className="text-lg">Iniciar Ligação</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,11 +77,11 @@ const WhatsApp = () => {
                 id="telefone"
                 type="tel"
                 value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
-                placeholder="(11) 99999-9999"
+                onChange={(e) => setTelefone(formatPhone(e.target.value))}
+                placeholder="(71) 99999-9999"
               />
               <p className="text-xs text-muted-foreground">
-                Informe o número com DDD. Ex: (11) 99999-9999
+                Informe o número com DDD. Ex: (71) 99999-9999
               </p>
             </div>
 
