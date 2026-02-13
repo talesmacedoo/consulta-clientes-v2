@@ -46,14 +46,22 @@ export interface QuitacaoResponse {
   detalhes: {
     valorOriginal: number;
     jurosEconomizados: number;
-    descontoAplicado?: number;
+    descontoAplicado?: number | null;
   };
+  parcelas: Parcela[];
 }
 
 export const calcularQuitacao = async (data: QuitacaoRequest): Promise<QuitacaoResponse> => {
   const response = await api.post('/calculadora/quitacao', data);
   return response.data;
 };
+
+export interface Parcela {
+  numero: number;
+  vencimento: string;
+  valorOriginal: number;
+  valorPresente: number;
+}
 
 // Bank Consultation
 export interface ConsultaBancoResponse {

@@ -46,15 +46,7 @@ const Quitacao = () => {
     } catch (err) {
       setError('Erro ao calcular quitação. Verifique os dados e tente novamente.');
       // Mock response for demo
-      setResultado({
-        valorQuitacao: formData.valorContrato * 0.7,
-        economiaObtida: formData.valorContrato * 0.3,
-        detalhes: {
-          valorOriginal: formData.valorContrato,
-          jurosEconomizados: formData.valorContrato * 0.25,
-          descontoAplicado: formData.simularDesconto ? formData.valorContrato * 0.05 : undefined,
-        },
-      });
+
     } finally {
       setLoading(false);
     }
@@ -227,6 +219,38 @@ const Quitacao = () => {
                 )}
               </div>
             </div>
+
+            <div className="mt-6 bg-muted rounded-lg p-4">
+              <h3 className="font-medium text-sm mb-3">Parcelas Consideradas</h3>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground">
+                      <th className="text-left">#</th>
+                      <th className="text-left">Vencimento</th>
+                      <th className="text-right">Valor Original</th>
+                      <th className="text-right">Valor Presente</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {resultado.parcelas.map((p) => (
+                      <tr key={p.numero} className="border-t">
+                        <td>{p.numero}</td>
+                        <td>{p.vencimento}</td>
+                        <td className="text-right">
+                          {formatCurrency(p.valorOriginal)}
+                        </td>
+                        <td className="text-right text-primary font-medium">
+                          {formatCurrency(p.valorPresente)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </CardContent>
         </Card>
       )}
