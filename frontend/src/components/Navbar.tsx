@@ -7,7 +7,7 @@ const navItems = [
   { path: '/quitacao', label: 'Quitação', icon: Calculator },
   { path: '/bancos', label: 'Bancos', icon: Building2 },
   { path: '/ia', label: 'IA', icon: Bot },
-  { path: '/whatsapp', label: 'WhatsApp', icon: Phone },
+  { path: '/whatsapp', label: 'Ligação WhatsApp', icon: Phone },
 ];
 
 const Navbar = () => {
