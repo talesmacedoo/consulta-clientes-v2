@@ -16,3 +16,8 @@ Thumbs.db
 
 database/
 *.db
+
+# Variaveis de ambiente
+.env
+.env.*
+.env.local
