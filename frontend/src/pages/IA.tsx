@@ -1,155 +1,65 @@
-import { useState } from 'react';
-import { Bot, Send, Sparkles, Lightbulb, TrendingUp } from 'lucide-react';
-import { analisarIA, type IAAnaliseResponse } from '@/services/api';
+import { Bot, Sparkles, Construction, Hammer, Rocket } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 const IA = () => {
-  const [texto, setTexto] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [resultado, setResultado] = useState<IAAnaliseResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!texto.trim()) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await analisarIA({ texto });
-      setResultado(response);
-    } catch {
-      setResultado(null);
-      setError('Análise de IA indisponível no momento.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const exampleTexts = [
-    'O cliente disse que está pagando muito caro na parcela atual e quer reduzir o valor mensal.',
-    'Aposentado interessado em contratar novo consignado, mas já possui 3 contratos ativos.',
-    'Cliente reclamando que o banco atual não oferece boas condições de refinanciamento.',
-  ];
-
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="page-title flex items-center gap-3">
-          <Bot className="w-7 h-7 text-primary" />
-          Assistente IA
-        </h1>
-        <p className="text-muted-foreground">
-          Cole transcrições de conversas para receber sugestões de abordagem inteligente.
+    <div className="max-w-4xl mx-auto h-[80vh] flex items-center justify-center animate-in fade-in duration-700">
+      <div className="text-center space-y-8 relative">
+        {/* Decorative elements */}
+        <div className="absolute -top-12 -left-12 w-24 h-24 bg-primary/10 blur-3xl rounded-full" />
+        <div className="absolute -bottom-12 -right-12 w-24 h-24 bg-primary/10 blur-3xl rounded-full" />
+
+        <div className="inline-flex p-6 rounded-3xl bg-primary/10 mb-2 relative group overflow-hidden">
+           <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+           <Bot className="w-16 h-16 text-primary relative z-10 animate-bounce" />
+        </div>
+
+        <div className="space-y-4 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-2 border border-primary/20">
+            <Sparkles className="w-3 h-3" />
+            Funcionalidade em Desenvolvimento
+          </div>
+          
+          <h1 className="text-5xl font-black tracking-tight text-foreground md:text-6xl">
+            IA Estratégica <br />
+            <span className="text-primary">Em breve.</span>
+          </h1>
+          
+          <p className="text-muted-foreground max-w-md mx-auto text-lg font-medium leading-relaxed">
+            Estamos integrando uma inteligência artificial avançada para gerar roteiros persuasivos e análise de sentimentos em tempo real.
+          </p>
+        </div>
+
+        <Card className="max-w-md mx-auto border-none shadow-2xl bg-card/50 backdrop-blur-sm overflow-hidden">
+          <CardContent className="pt-8 pb-8 space-y-6">
+            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-muted-foreground px-2">
+              <div className="flex items-center gap-2">
+                 <Construction className="w-4 h-4" />
+                 Status
+              </div>
+              <span className="text-primary">85% Concluído</span>
+            </div>
+            
+            <div className="h-3 w-full bg-muted rounded-full p-1 border border-border/50">
+               <div className="h-full bg-primary rounded-full animate-pulse transition-all duration-1000 shadow-[0_0_15px_rgba(var(--primary),0.5)]" style={{ width: '85%' }} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+               <div className="p-4 rounded-2xl bg-secondary/30 border border-border/30 flex flex-col items-center gap-2">
+                  <Hammer className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-[10px] font-bold uppercase">Construindo</span>
+               </div>
+               <div className="p-4 rounded-2xl bg-secondary/30 border border-border/30 flex flex-col items-center gap-2">
+                  <Rocket className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-[10px] font-bold uppercase">Escalando</span>
+               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <p className="text-xs text-muted-foreground animate-pulse">
+           Fique atento às próximas atualizações do sistema Maktub.
         </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Input Section */}
-        <div className="lg:col-span-2 space-y-6">
-          <form onSubmit={handleSubmit} className="card-dashboard space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Transcrição ou Resumo da Conversa
-              </label>
-              <textarea
-                value={texto}
-                onChange={(e) => setTexto(e.target.value)}
-                className="input-field min-h-[200px] resize-none"
-                placeholder="Cole aqui a transcrição da conversa com o cliente ou descreva o cenário..."
-                required
-              />
-            </div>
-
-            <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <Sparkles className="w-5 h-5 mr-2 animate-pulse" />
-                  Analisando...
-                </>
-              ) : (
-                <>
-                  <Send className="w-5 h-5 mr-2" />
-                  Analisar com IA
-                </>
-              )}
-            </button>
-
-            {error && (
-              <div className="p-4 bg-destructive/10 text-destructive rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-          </form>
-
-          {/* Results */}
-          {resultado && (
-            <div className="space-y-6 animate-fade-in">
-              {/* Suggested Approach */}
-              <div className="card-dashboard">
-                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  Abordagem Sugerida
-                </h2>
-                <p className="text-foreground leading-relaxed">{resultado.abordagemSugerida}</p>
-              </div>
-
-              {/* Reasoning */}
-              <div className="card-dashboard">
-                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
-                  <Lightbulb className="w-5 h-5 text-warning" />
-                  Raciocínio
-                </h2>
-                <p className="text-muted-foreground leading-relaxed">{resultado.raciocinio}</p>
-              </div>
-
-              {/* Opportunities */}
-              <div className="card-dashboard">
-                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
-                  <TrendingUp className="w-5 h-5 text-success" />
-                  Oportunidades Identificadas
-                </h2>
-                <ul className="space-y-3">
-                  {resultado.oportunidades.map((oportunidade, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-success/10 text-success flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-xs font-bold">{index + 1}</span>
-                      </div>
-                      <span className="text-foreground">{oportunidade}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Examples Sidebar */}
-        <div className="lg:col-span-1">
-          <div className="card-dashboard">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Exemplos de Uso</h2>
-            <div className="space-y-3">
-              {exampleTexts.map((example, index) => (
-                <button
-                  key={index}
-                  onClick={() => setTexto(example)}
-                  className="w-full text-left p-3 bg-muted rounded-lg text-sm text-muted-foreground hover:bg-secondary transition-colors"
-                >
-                  "{example.slice(0, 60)}..."
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="card-dashboard mt-4">
-            <h2 className="text-sm font-semibold text-foreground mb-2">💡 Dica</h2>
-            <p className="text-sm text-muted-foreground">
-              Quanto mais detalhes você fornecer sobre a conversa, mais precisa será a sugestão da IA.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
