@@ -43,17 +43,9 @@ const Bancos = () => {
     try {
       const response = await consultarBanco(cleanCPF);
       setResultado(response);
-    } catch (err) {
-      setError('Erro na consulta. Tente novamente.');
-      // Mock response for demo
-      setResultado({
-        margemConsignavel: 850.0,
-        contratosAtivos: [
-          { banco: 'Banco do Brasil', valorParcela: 320.0, parcelasRestantes: 24 },
-          { banco: 'Caixa Econômica', valorParcela: 180.0, parcelasRestantes: 12 },
-        ],
-        possivelRefinanciamento: true,
-      });
+    } catch {
+      setResultado(null);
+      setError('Consulta bancária indisponível no momento.');
     } finally {
       setLoading(false);
     }

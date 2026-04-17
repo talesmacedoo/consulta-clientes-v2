@@ -1,37 +1,37 @@
 import { useState } from 'react';
-import { Calculator, Download, Percent } from 'lucide-react';
+import { Calculator, Download, Percent, TrendingDown, Banknote, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { calcularQuitacao, type QuitacaoRequest, type QuitacaoResponse } from '@/services/api';
+import { exportarPNG } from '@/utils/exportarPNG';
 
 const Quitacao = () => {
   const [formData, setFormData] = useState<QuitacaoRequest>({
-    valorContrato: 0,
-    parcelasPagas: 0,
-    parcelasRestantes: 0,
+    dataAssinatura: '',
+    valorParcela: 0,
     jurosMensal: 0,
-    simularDesconto: false,
+    diaVencimento: 0,
+    dataQuitacao: '',
+    totalParcelas: 0,
   });
+
   const [resultado, setResultado] = useState<QuitacaoResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tabelaAberta, setTabelaAberta] = useState(false);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: parseFloat(value) || 0,
+      [name]: type === 'number' ? (value === '' ? 0 : parseFloat(value)) : value,
     }));
   };
 
@@ -39,72 +39,85 @@ const Quitacao = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     try {
       const response = await calcularQuitacao(formData);
       setResultado(response);
-    } catch (err) {
+      setTabelaAberta(false);
+    } catch {
       setError('Erro ao calcular quitação. Verifique os dados e tente novamente.');
-      // Mock response for demo
-
     } finally {
       setLoading(false);
     }
   };
 
-  const handleExportPDF = () => {
-    alert('Funcionalidade de exportar PDF em desenvolvimento');
+  const handleExportPDF = async () => {
+    if (!resultado) return;
+    setExporting(true);
+    try {
+      await exportarPNG(resultado, formData);
+    } catch {
+      setError('Erro ao gerar imagem. Tente novamente.');
+    } finally {
+      setExporting(false);
+    }
   };
+
+  const pctPago = resultado
+    ? resultado.valorQuitacao / resultado.totalNominal
+    : 0;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
           <Calculator className="w-6 h-6 text-primary" />
-          Calculadora de Quitação
+          Calculadora de Quitação Antecipada
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Calcule o valor de quitação antecipada de contratos consignados.
+          Resultado meramente informativo. Compare sempre com o cálculo da instituição financeira.
         </p>
       </div>
 
-      {/* Form */}
       <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg">Dados do Contrato</CardTitle>
+        <CardHeader>
+          <CardTitle>Dados do Contrato</CardTitle>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
               <div className="space-y-2">
-                <Label htmlFor="valorContrato">Valor Total do Contrato</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
-                  <Input
-                    id="valorContrato"
-                    type="number"
-                    name="valorContrato"
-                    value={formData.valorContrato || ''}
-                    onChange={handleInputChange}
-                    className="pl-10"
-                    placeholder="0,00"
-                    required
-                  />
-                </div>
+                <Label>Data de Assinatura</Label>
+                <Input
+                  type="date"
+                  name="dataAssinatura"
+                  value={formData.dataAssinatura}
+                  onChange={handleInputChange}
+                  required
+                />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="jurosMensal">Juros Mensal (%)</Label>
+                <Label>Valor da Parcela</Label>
+                <Input
+                  type="number"
+                  name="valorParcela"
+                  value={formData.valorParcela || ''}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Taxa de Juros (ao mês)</Label>
                 <div className="relative">
                   <Input
-                    id="jurosMensal"
                     type="number"
                     name="jurosMensal"
                     value={formData.jurosMensal || ''}
                     onChange={handleInputChange}
-                    className="pr-10"
-                    placeholder="0,00"
                     step="0.01"
                     required
                   />
@@ -113,44 +126,40 @@ const Quitacao = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="parcelasPagas">Parcelas Pagas</Label>
+                <Label>Dia do Vencimento</Label>
                 <Input
-                  id="parcelasPagas"
                   type="number"
-                  name="parcelasPagas"
-                  value={formData.parcelasPagas || ''}
+                  name="diaVencimento"
+                  value={formData.diaVencimento || ''}
                   onChange={handleInputChange}
-                  placeholder="0"
+                  min="1"
+                  max="31"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="parcelasRestantes">Parcelas Restantes</Label>
+                <Label>Quantidade Total de Parcelas</Label>
                 <Input
-                  id="parcelasRestantes"
                   type="number"
-                  name="parcelasRestantes"
-                  value={formData.parcelasRestantes || ''}
+                  name="totalParcelas"
+                  value={formData.totalParcelas || ''}
                   onChange={handleInputChange}
-                  placeholder="0"
                   required
                 />
               </div>
-            </div>
 
-            {/* Discount Toggle */}
-            <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-              <Checkbox
-                id="simularDesconto"
-                checked={formData.simularDesconto}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, simularDesconto: checked === true }))
-                }
-              />
-              <Label htmlFor="simularDesconto" className="cursor-pointer">
-                Simular com desconto adicional (5%)
-              </Label>
+              <div className="space-y-2">
+                <Label>Data de Quitação</Label>
+                <Input
+                  type="date"
+                  name="dataQuitacao"
+                  value={formData.dataQuitacao}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
             </div>
 
             {error && (
@@ -159,96 +168,151 @@ const Quitacao = () => {
               </Alert>
             )}
 
-            <Button type="submit" disabled={loading} className="w-full md:w-auto">
-              {loading ? 'Calculando...' : 'Calcular Quitação'}
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Calculando...' : 'Calcular'}
             </Button>
           </form>
         </CardContent>
       </Card>
 
-      {/* Results */}
       {resultado && (
         <Card>
-          <CardHeader className="pb-4 flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Resultado do Cálculo</CardTitle>
-            <Button variant="outline" size="sm" onClick={handleExportPDF}>
-              <Download className="w-4 h-4 mr-2" />
-              Exportar PDF
+          <CardHeader className="flex flex-row justify-between items-center">
+            <CardTitle>Resultado</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+              disabled={exporting}
+            >
+              {exporting
+                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Gerando...</>
+                : <><Download className="w-4 h-4 mr-2" />Salvar imagem</>
+              }
             </Button>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                <p className="text-sm text-muted-foreground">Valor para Quitação</p>
-                <p className="text-2xl font-bold text-primary mt-1">
-                  {formatCurrency(resultado.valorQuitacao)}
-                </p>
-              </div>
 
-              <div className="p-4 bg-success/5 rounded-lg border border-success/20">
-                <p className="text-sm text-muted-foreground">Economia Obtida</p>
-                <p className="text-2xl font-bold text-success mt-1">
+          <CardContent className="space-y-6">
+
+            {/* Valor principal */}
+            <div className="p-4 bg-primary/5 rounded-lg border">
+              <p className="text-sm text-muted-foreground">Valor Total para Quitação</p>
+              <p className="text-2xl font-bold text-primary mt-1">
+                {formatCurrency(resultado.valorQuitacao)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Data-base: {formData.dataQuitacao.split('-').reverse().join('/')}
+              </p>
+            </div>
+
+            {/* Barra proporcional */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Valor a quitar vs. total nominal</span>
+                <span>{resultado.percentualEconomizado}% economizado</span>
+              </div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-700"
+                  style={{ width: `${Math.min(pctPago * 100, 100)}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{formatCurrency(resultado.valorQuitacao)}</span>
+                <span>de {formatCurrency(resultado.totalNominal)}</span>
+              </div>
+            </div>
+
+            {/* Cards de métricas */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="p-3 rounded-lg border bg-green-500/5 border-green-500/20">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <TrendingDown className="w-3.5 h-3.5 text-green-600" />
+                  <p className="text-xs text-muted-foreground">Juros economizados</p>
+                </div>
+                <p className="text-base font-semibold text-green-600">
                   {formatCurrency(resultado.economiaObtida)}
                 </p>
               </div>
-            </div>
 
-            {/* Breakdown */}
-            <div className="p-4 bg-muted rounded-lg space-y-2">
-              <h3 className="font-medium text-foreground text-sm">Detalhamento</h3>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Valor Original do Contrato</span>
-                  <span className="font-medium text-foreground">
-                    {formatCurrency(resultado.detalhes.valorOriginal)}
-                  </span>
+              <div className="p-3 rounded-lg border bg-destructive/5 border-destructive/20">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Banknote className="w-3.5 h-3.5 text-destructive" />
+                  <p className="text-xs text-muted-foreground">Total nominal</p>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Juros Economizados</span>
-                  <span className="font-medium text-success">
-                    - {formatCurrency(resultado.detalhes.jurosEconomizados)}
-                  </span>
+                <p className="text-base font-semibold text-destructive">
+                  {formatCurrency(resultado.totalNominal)}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg border">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Percent className="w-3.5 h-3.5 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">% economizado</p>
                 </div>
-                {resultado.detalhes.descontoAplicado && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Desconto Adicional (5%)</span>
-                    <span className="font-medium text-success">
-                      - {formatCurrency(resultado.detalhes.descontoAplicado)}
-                    </span>
-                  </div>
-                )}
+                <p className="text-base font-semibold">{resultado.percentualEconomizado}%</p>
+              </div>
+
+              <div className="p-3 rounded-lg border">
+                <p className="text-xs text-muted-foreground mb-1">Desconto médio/parcela</p>
+                <p className="text-base font-semibold">
+                  {formatCurrency(resultado.descontoMedioParcela)}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg border">
+                <p className="text-xs text-muted-foreground mb-1">Parcelas antecipadas</p>
+                <p className="text-base font-semibold">{resultado.parcelas.length}</p>
+                <p className="text-xs text-muted-foreground">
+                  até {resultado.parcelas.at(-1)?.vencimento}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg border bg-green-500/5 border-green-500/20">
+                <p className="text-xs text-muted-foreground mb-1">Economia/mês antecipado</p>
+                <p className="text-base font-semibold text-green-600">
+                  {formatCurrency(resultado.economiaObtida / resultado.parcelas.length)}
+                </p>
               </div>
             </div>
 
-            <div className="mt-6 bg-muted rounded-lg p-4">
-              <h3 className="font-medium text-sm mb-3">Parcelas Consideradas</h3>
+            {/* Tabela recolhível */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setTabelaAberta((v) => !v)}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
+              >
+                {tabelaAberta ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {tabelaAberta ? 'Ocultar' : 'Ver'} detalhamento por parcela
+              </button>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-muted-foreground">
-                      <th className="text-left">#</th>
-                      <th className="text-left">Vencimento</th>
-                      <th className="text-right">Valor Original</th>
-                      <th className="text-right">Valor Presente</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {resultado.parcelas.map((p) => (
-                      <tr key={p.numero} className="border-t">
-                        <td>{p.numero}</td>
-                        <td>{p.vencimento}</td>
-                        <td className="text-right">
-                          {formatCurrency(p.valorOriginal)}
-                        </td>
-                        <td className="text-right text-primary font-medium">
-                          {formatCurrency(p.valorPresente)}
-                        </td>
+              {tabelaAberta && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-muted-foreground">
+                        <th className="text-left">#</th>
+                        <th className="text-left">Data Vencimento</th>
+                        <th className="text-right">Valor Parcela</th>
+                        <th className="text-right">Valor Presente</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {resultado.parcelas.map((p) => (
+                        <tr key={p.numero} className="border-t">
+                          <td>{p.numero}</td>
+                          <td>{p.vencimento}</td>
+                          <td className="text-right">{formatCurrency(p.valorOriginal)}</td>
+                          <td className="text-right font-medium text-primary">
+                            {formatCurrency(p.valorPresente)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
           </CardContent>

@@ -6,6 +6,7 @@ const IA = () => {
   const [texto, setTexto] = useState('');
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState<IAAnaliseResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -13,23 +14,14 @@ const IA = () => {
     if (!texto.trim()) return;
 
     setLoading(true);
+    setError(null);
 
     try {
       const response = await analisarIA({ texto });
       setResultado(response);
-    } catch (err) {
-      // Mock response for demo
-      setResultado({
-        abordagemSugerida:
-          'Inicie a conversa destacando a economia que o cliente pode obter com a quitação antecipada. Mencione a possibilidade de liberar margem para um novo empréstimo com taxa mais competitiva.',
-        raciocinio:
-          'O cliente demonstra interesse em reduzir custos mensais. A análise do histórico indica que contratos longos com taxas antigas são bons candidatos para refinanciamento.',
-        oportunidades: [
-          'Quitação antecipada do contrato atual com 15% de desconto',
-          'Novo empréstimo com taxa 30% menor',
-          'Liberação de R$ 500 de margem adicional',
-        ],
-      });
+    } catch {
+      setResultado(null);
+      setError('Análise de IA indisponível no momento.');
     } finally {
       setLoading(false);
     }
@@ -84,6 +76,12 @@ const IA = () => {
                 </>
               )}
             </button>
+
+            {error && (
+              <div className="p-4 bg-destructive/10 text-destructive rounded-lg text-sm">
+                {error}
+              </div>
+            )}
           </form>
 
           {/* Results */}

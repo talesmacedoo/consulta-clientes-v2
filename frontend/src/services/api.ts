@@ -31,37 +31,39 @@ export const consultarCliente = async (cpf: string, telefone: string): Promise<C
   return response.data;
 };
 
-// Quitação Calculator
+// Calculadora de Quitação
 export interface QuitacaoRequest {
-  valorContrato: number;
-  parcelasPagas: number;
-  parcelasRestantes: number;
+  dataAssinatura: string;
+  valorParcela: number;
   jurosMensal: number;
-  simularDesconto?: boolean;
+  diaVencimento: number;
+  dataQuitacao: string;
+  totalParcelas: number;
 }
 
-export interface QuitacaoResponse {
-  valorQuitacao: number;
-  economiaObtida: number;
-  detalhes: {
-    valorOriginal: number;
-    jurosEconomizados: number;
-    descontoAplicado?: number | null;
-  };
-  parcelas: Parcela[];
-}
-
-export const calcularQuitacao = async (data: QuitacaoRequest): Promise<QuitacaoResponse> => {
-  const response = await api.post('/calculadora/quitacao', data);
-  return response.data;
-};
-
-export interface Parcela {
+export interface ParcelaDetalhe {
   numero: number;
   vencimento: string;
   valorOriginal: number;
   valorPresente: number;
 }
+
+export interface QuitacaoResponse {
+  valorQuitacao: number;
+  economiaObtida: number;
+  totalNominal: number;
+  percentualEconomizado: number;
+  descontoMedioParcela: number;
+  parcelas: ParcelaDetalhe[];
+}
+
+export const calcularQuitacao = async (
+  data: QuitacaoRequest
+): Promise<QuitacaoResponse> => {
+  const response = await api.post('/calculadora/quitacao', data);
+  return response.data;
+};
+
 
 // Bank Consultation
 export interface ConsultaBancoResponse {
