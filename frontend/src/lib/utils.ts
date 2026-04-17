@@ -94,3 +94,22 @@ export function formatPhone(value: string): string {
 
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
+
+/**
+ * Formata data de YYYY-MM-DD para DD/MM/YYYY
+ */
+export function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return 'Não informada';
+  
+  // Se já estiver no formato DD/MM/YYYY, retorna como está
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
+  
+  // Tenta converter de YYYY-MM-DD para DD/MM/YYYY
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    return `${day}/${month}/${year}`;
+  }
+  
+  return dateStr;
+}
