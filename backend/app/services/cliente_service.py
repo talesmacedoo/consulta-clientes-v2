@@ -1,6 +1,7 @@
+import requests
 from datetime import datetime
+from flask import current_app
 from app.models.cliente import Cliente
-
 
 def _limpar_cpf(cpf: str) -> str:
     return cpf.replace(".", "").replace("-", "").replace(" ", "")
@@ -14,6 +15,40 @@ def _limpar_telefone(telefone: str) -> str:
         .replace(" ", "")
     )
 
+
+import re
+
+def check_blacklist(query: str) -> bool:
+    if not query:
+        return False
+    try:
+        # Remove caracteres não numéricos para a consulta
+        query_clean = re.sub(r"\D", "", query)
+        api_base = current_app.config.get("API_BASE_URL", "http://192.168.1.60:5001")
+        response = requests.get(f"{api_base}/blacklist/buscar", params={"q": query_clean}, timeout=3)
+        if response.status_code == 200:
+            data = response.json()
+            return len(data.get("results", [])) > 0
+    except Exception as e:
+        print(f"Erro ao consultar blacklist: {e}")
+    return False
+
+def check_sem_interesse(query: str) -> bool:
+    if not query:
+        return False
+    try:
+        # Remove caracteres não numéricos para a consulta
+        query_clean = re.sub(r"\D", "", query)
+        api_base = current_app.config.get("API_BASE_URL", "http://192.168.1.60:5001")
+        response = requests.get(f"{api_base}/si/buscar", params={"q": query_clean}, timeout=3)
+        if response.status_code == 200:
+            data = response.json()
+            resultados = data.get("results", [])
+            if resultados:
+                return True
+    except Exception as e:
+        print(f"Erro ao consultar sem_interesse: {e}")
+    return False
 
 def consultar_cliente(cpf: str | None = None, telefone: str | None = None):
     if not cpf and not telefone:
