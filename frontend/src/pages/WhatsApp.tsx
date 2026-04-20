@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Phone, ExternalLink, ShieldCheck, Zap, Copy, Check, Headset } from 'lucide-react';
+import { Phone, ExternalLink, ShieldCheck, Zap, Copy, Check, Headset, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,10 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { formatPhone, validatePhone} from '@/lib/utils';
 import { toast } from 'sonner';
+import { verificarRestricoes } from '@/services/api';
 
 const WhatsApp = () => {
   const [telefone, setTelefone] = useState('');
   const [erro, setErro] = useState('');
+  const [loading, setLoading] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const formatPhoneForWhatsApp = (phone: string): string => {
@@ -21,7 +23,7 @@ const WhatsApp = () => {
     return numbers;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro('');
 
@@ -34,12 +36,33 @@ const WhatsApp = () => {
       setErro('Número de telefone inválido. Informe o DDD + número.');
       return;
     }
-
-    const formattedPhone = formatPhoneForWhatsApp(telefone);
-    const whatsappUrl = `https://wa.me/${formattedPhone}`;
     
-    toast.success('Direcionando para o WhatsApp...');
-    window.open(whatsappUrl, '_blank');
+    setLoading(true);
+
+    try {
+      const resp = await verificarRestricoes(telefone.replace(/\D/g, ''));
+      
+      if (resp.bloqueado) {
+        setErro('Cliente na blacklist da empresa. Não é possível iniciar atendimento.');
+        setLoading(false);
+        return;
+      }
+      
+      if (resp.aviso === 'sem_interesse') {
+        toast.warning('Atenção: Cliente relatou não ter interesse recentemente.', { duration: 5000 });
+      }
+
+      const formattedPhone = formatPhoneForWhatsApp(telefone);
+      const whatsappUrl = `https://wa.me/${formattedPhone}`;
+      
+      toast.success('Direcionando para o WhatsApp...');
+      window.open(whatsappUrl, '_blank');
+      
+    } catch(err) {
+      setErro('Erro ao verificar restrições. Tente novamente mais tarde.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const copyToClipboard = async (text: string, field: string) => {
@@ -124,9 +147,13 @@ const WhatsApp = () => {
               </Alert>
             )}
 
-            <Button type="submit" className="w-full h-16 bg-green-600 hover:bg-green-700 text-white font-black text-xl shadow-xl shadow-green-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all rounded-2xl">
-              <ExternalLink className="w-6 h-6 mr-3" />
-              Realizar Ligação
+            <Button disabled={loading} type="submit" className="w-full h-16 bg-green-600 hover:bg-green-700 text-white font-black text-xl shadow-xl shadow-green-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all rounded-2xl">
+              {loading ? (
+                 <Loader2 className="w-6 h-6 mr-3 animate-spin" />
+              ) : (
+                <ExternalLink className="w-6 h-6 mr-3" />
+              )}
+              {loading ? "Verificando..." : "Realizar Ligação"}
             </Button>
           </form>
         </CardContent>

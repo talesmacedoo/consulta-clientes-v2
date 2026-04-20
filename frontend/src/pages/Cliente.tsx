@@ -46,6 +46,9 @@ const Cliente = () => {
     } catch (err: any) {
       if (err.response?.status === 404) {
         setResultado({ found: false } as ConsultaClienteResponse);
+      } else if (err.response?.status === 403) {
+        setErro(err.response?.data?.message || 'Cliente listado na Blacklist.');
+        setResultado({ found: false } as ConsultaClienteResponse);
       } else {
         setErro('Erro ao consultar cliente.');
       }
@@ -212,6 +215,15 @@ const Cliente = () => {
       {/* Result Section */}
       {resultado && resultado.found && (
         <div className="space-y-6 animate-in slide-in-from-bottom-5 duration-700">
+          
+          {resultado.sem_interesse && (
+            <Alert className="bg-yellow-500/10 border-yellow-500/20 text-yellow-600 dark:text-yellow-500">
+              <AlertDescription className="font-bold flex items-center gap-2">
+                ⚠️ {resultado.message || 'Atenção: cliente relatou não ter interesse recentemente.'}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="flex items-center gap-3 px-2">
             <div className="w-1.5 h-8 bg-primary rounded-full" />
             <h2 className="text-xl font-bold">Resultado Encontrado</h2>

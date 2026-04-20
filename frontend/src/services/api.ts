@@ -20,6 +20,9 @@ export interface ClienteResponse {
 export interface ConsultaClienteResponse {
   found: boolean;
   cliente: ClienteResponse;
+  message?: string;
+  is_blacklist?: boolean;
+  sem_interesse?: boolean;
 }
 
 export const consultarCliente = async (cpf: string, telefone: string): Promise<ConsultaClienteResponse> => {
@@ -28,6 +31,18 @@ export const consultarCliente = async (cpf: string, telefone: string): Promise<C
   if (telefone) params.append('telefone', telefone);
   
   const response = await api.get(`/clientes/consultar?${params.toString()}`);
+  return response.data;
+};
+
+export interface RestricoesResponse {
+  bloqueado: boolean;
+  motivo?: string;
+  aviso?: string;
+  error?: string;
+}
+
+export const verificarRestricoes = async (telefone: string): Promise<RestricoesResponse> => {
+  const response = await api.get(`/clientes/verificar-restricoes?telefone=${telefone}`);
   return response.data;
 };
 
