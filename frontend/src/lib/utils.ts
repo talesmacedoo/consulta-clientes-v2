@@ -113,3 +113,32 @@ export function formatDate(dateStr: string | null | undefined): string {
   
   return dateStr;
 }
+
+/**
+ * Calcula a idade com base em uma data de nascimento
+ * @param birthDateStr - Data de nascimento em formato YYYY-MM-DD ou DD/MM/YYYY
+ */
+export function calculateAge(birthDateStr: string | null | undefined): number | null {
+  if (!birthDateStr) return null;
+
+  let birthDate: Date;
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(birthDateStr)) {
+    const [day, month, year] = birthDateStr.split('/').map(Number);
+    birthDate = new Date(year, month - 1, day);
+  } else {
+    birthDate = new Date(birthDateStr);
+  }
+
+  if (isNaN(birthDate.getTime())) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+
+  return age;
+}

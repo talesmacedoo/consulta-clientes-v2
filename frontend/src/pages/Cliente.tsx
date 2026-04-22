@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ConsultaClienteResponse, consultarCliente } from '@/services/api';
-import { validateCPF, formatCPF, formatPhone, validatePhone, formatDate } from '@/lib/utils';
+import { validateCPF, formatCPF, formatPhone, validatePhone, formatDate, calculateAge } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const Cliente = () => {
@@ -254,7 +254,11 @@ const Cliente = () => {
             />
             <InfoField 
               label="Data de Nascimento" 
-              value={formatDate(resultado.cliente.data_nascimento)} 
+              value={
+                resultado.cliente.data_nascimento 
+                  ? `${formatDate(resultado.cliente.data_nascimento)} (${calculateAge(resultado.cliente.data_nascimento)} anos)` 
+                  : 'Não informada'
+              } 
               icon={Calendar} 
               fieldKey="nascimento"
             />
